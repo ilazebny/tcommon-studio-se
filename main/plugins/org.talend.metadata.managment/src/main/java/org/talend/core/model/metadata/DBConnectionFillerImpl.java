@@ -309,9 +309,8 @@ public class DBConnectionFillerImpl extends MetadataFillerImpl<DatabaseConnectio
         // ResultSet catalogs = dbJDBCMetadata.getCatalogs();
         // ~18975
         if (!hasSchema) {
-            // create a fake schema with an empty name (otherwise queries will use the name and will fail)
-            Schema schema = SchemaHelper.createSchema(" "); //$NON-NLS-1$
-            returnSchemas.add(schema);
+            // TDI-30715: Only here handle the lightweight db which no catalogs and no schemas(such as Sqlite)
+            fillSqliteFakeSchemas(returnSchemas);
         }
         // MOD gdbu 2011-4-12 bug : 18975
         // catalogs.close();
@@ -348,6 +347,16 @@ public class DBConnectionFillerImpl extends MetadataFillerImpl<DatabaseConnectio
         return ListUtils.castList(Package.class, returnSchemas);
     }
 
+    /**
+     * fill the fake schemas into sqlite database connection since Sqlite no catalogs and no schemas.
+     * 
+     * @param fakeSchemas
+     * @return
+     */
+    private void fillSqliteFakeSchemas(List<Schema> fakeSchemas) {
+        fakeSchemas.add(SchemaHelper.createSchema(" "));
+    }
+
     public List<Catalog> fillCatalogs(DatabaseConnection dbConn, DatabaseMetaData dbJDBCMetadata, List<String> catalogFilter) {
         return fillCatalogs(dbConn, dbJDBCMetadata, null, catalogFilter);
     }
@@ -355,9 +364,6 @@ public class DBConnectionFillerImpl extends MetadataFillerImpl<DatabaseConnectio
     public List<Catalog> fillCatalogs(DatabaseConnection dbConn, DatabaseMetaData dbJDBCMetadata,
             IMetadataConnection metaConnection, List<String> catalogFilter) {
         List<Catalog> catalogList = new ArrayList<Catalog>();
-        // before fill Catalogs ,need clear cache first
-        List<Catalog> catalogs = ConnectionHelper.getCatalogs(dbConn);
-        ConnectionHelper.removeCatalogs(catalogs, dbConn);
         if (dbJDBCMetadata == null) {
             return null;
         }
@@ -385,12 +391,11 @@ public class DBConnectionFillerImpl extends MetadataFillerImpl<DatabaseConnectio
         }
 
         try {
-            if (dbJDBCMetadata.getDatabaseProductName() != null
-                    && dbJDBCMetadata.getDatabaseProductName().indexOf(EDatabaseTypeName.ORACLEFORSID.getProduct()) > -1) {
+            if (!isDbSupportCatalogNames(dbJDBCMetadata)) {
                 return catalogList;
             }
-            // ODBC teradata dosen't support 'dbJDBCMetadata.getCatalogs()',return at here.
-            if (ConnectionUtils.isOdbcTeradata(dbJDBCMetadata)) {
+            if (!isDbHasCatalogs(dbJDBCMetadata)) {
+                ConnectionHelper.removeAllPackages(dbConn);
                 return catalogList;
             }
             ResultSet catalogNames = null;
@@ -559,6 +564,37 @@ public class DBConnectionFillerImpl extends MetadataFillerImpl<DatabaseConnectio
         }
 
         return catalogList;
+    }
+
+    /**
+     * judge db support get catalogNames or not
+     * 
+     * @param dbJDBCMetadata
+     * @return
+     */
+    private boolean isDbSupportCatalogNames(DatabaseMetaData dbJDBCMetadata) throws SQLException {
+        if (ConnectionUtils.isOracleForSid(dbJDBCMetadata, EDatabaseTypeName.ORACLEFORSID.getProduct())) {
+            return false;
+        }
+        // ODBC teradata dosen't support 'dbJDBCMetadata.getCatalogs()',return at here.
+        if (ConnectionUtils.isOdbcTeradata(dbJDBCMetadata)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * judge db have catalogs or not
+     * 
+     * @param dbJDBCMetadata
+     * @return
+     */
+    private boolean isDbHasCatalogs(DatabaseMetaData dbJDBCMetadata) throws SQLException {
+        // Although Sqlite support 'dbJDBCMetadata.getCatalogs()',but in fact it has no catalogs,just return.
+        if (ConnectionUtils.isSqlite(dbJDBCMetadata, EDatabaseTypeName.SQLITE.getProduct())) {
+            return false;
+        }
+        return true;
     }
 
     /**

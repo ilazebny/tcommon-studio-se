@@ -2649,82 +2649,9 @@ public class DatabaseForm extends AbstractForm {
                 getConnection().getParameters().clear();
                 urlConnectionStringText.setEditable(false);
                 // add for bug 12649
-                boolean isGeneralJDBC = isGeneralJDBC();
-                if (isGeneralJDBC) {
-                    if (generalJdbcUrlText != null) {
-                        generalJdbcUrlText.setText(""); //$NON-NLS-1$
-                    }
-                    if (generalJdbcUserText != null) {
-                        generalJdbcUserText.setText(""); //$NON-NLS-1$
-                    }
-                    if (generalJdbcPasswordText != null) {
-                        generalJdbcPasswordText.setText(""); //$NON-NLS-1$
-                    }
-
-                } else if (isHiveDBConnSelected()) {
-                    // Added by Marvin Wang on Oct. 15, 2012 for bug TDI-23235.
-                    if (urlConnectionStringText != null) {
-                        urlConnectionStringText.setText(""); //$NON-NLS-1$
-                    }
-                    if (usernameText != null) {
-
-                        usernameText.setText(""); //$NON-NLS-1$
-                    }
-                    if (passwordText != null) {
-                        passwordText.setText(""); //$NON-NLS-1$
-                    }
-                    initHiveInfo();
-                } else if (isDBTypeSelected(EDatabaseConnTemplate.HBASE)) {
-                    initHBaseSettings();
-                } else {
-                    if (urlConnectionStringText != null) {
-                        urlConnectionStringText.setText(""); //$NON-NLS-1$
-                    }
-                    if (usernameText != null) {
-
-                        usernameText.setText(""); //$NON-NLS-1$
-                    }
-                    if (passwordText != null) {
-                        passwordText.setText(""); //$NON-NLS-1$
-                    }
-                }
-                if (schemaText != null) {
-                    schemaText.setText(""); //$NON-NLS-1$
-                }
-                if (serverText != null) {
-                    serverText.setText(""); //$NON-NLS-1$
-                }
-                if (sidOrDatabaseText != null) {
-                    sidOrDatabaseText.setText(""); //$NON-NLS-1$
-                }
-                if (portText != null && portText.getText() != null) {
-                    portText.setText(""); //$NON-NLS-1$
-                }
-                if (fileField != null) {
-                    fileField.setText(""); //$NON-NLS-1$
-                }
-                if (datasourceText != null) {
-                    datasourceText.setText(""); //$NON-NLS-1$
-                }
-                if (additionParamText != null) {
-                    additionParamText.setText(""); //$NON-NLS-1$
-                }
-                if (generalJdbcClassNameText != null) {
-                    generalJdbcClassNameText.setText(""); //$NON-NLS-1$
-                }
-                if (generalJdbcDriverjarText != null) {
-                    generalJdbcDriverjarText.setText(""); //$NON-NLS-1$
-                }
-                if (additionParamText != null) {
-                    additionParamText.setText(""); //$NON-NLS-1$
-                }
-                if (mappingFileText != null) {
-                    mappingFileText.setText(""); //$NON-NLS-1$
-                }
-
-                boolean hiddenGeneral = !isGeneralJDBC();
+                clearFiledsForDiffDbTypes();
                 // change controls
-                switchBetweenTypeandGeneralDB(hiddenGeneral);
+                switchBetweenTypeandGeneralDB(!isGeneralJDBC());
 
                 if (!isContextMode()) {
                     getConnection().setDatabaseType(dbTypeCombo.getText());
@@ -2905,6 +2832,80 @@ public class DatabaseForm extends AbstractForm {
 
         if (canLinkToHadoopCluster()) {
             addHadoopClusterLinkListeners();
+        }
+    }
+
+    private void clearFiledsForDiffDbTypes() {
+        if (isGeneralJDBC()) {
+            if (generalJdbcUrlText != null) {
+                generalJdbcUrlText.setText(""); //$NON-NLS-1$
+            }
+            if (generalJdbcUserText != null) {
+                generalJdbcUserText.setText(""); //$NON-NLS-1$
+            }
+            if (generalJdbcPasswordText != null) {
+                generalJdbcPasswordText.setText(""); //$NON-NLS-1$
+            }
+
+        } else if (isHiveDBConnSelected()) {
+            // Added by Marvin Wang on Oct. 15, 2012 for bug TDI-23235.
+            if (urlConnectionStringText != null) {
+                urlConnectionStringText.setText(""); //$NON-NLS-1$
+            }
+            if (usernameText != null) {
+
+                usernameText.setText(""); //$NON-NLS-1$
+            }
+            if (passwordText != null) {
+                passwordText.setText(""); //$NON-NLS-1$
+            }
+            initHiveInfo();
+        } else if (isDBTypeSelected(EDatabaseConnTemplate.HBASE)) {
+            initHBaseSettings();
+        } else {
+            if (urlConnectionStringText != null) {
+                urlConnectionStringText.setText(""); //$NON-NLS-1$
+            }
+            if (usernameText != null) {
+
+                usernameText.setText(""); //$NON-NLS-1$
+            }
+            if (passwordText != null) {
+                passwordText.setText(""); //$NON-NLS-1$
+            }
+        }
+        if (schemaText != null) {
+            schemaText.setText(""); //$NON-NLS-1$
+        }
+        if (serverText != null) {
+            serverText.setText(""); //$NON-NLS-1$
+        }
+        if (sidOrDatabaseText != null) {
+            sidOrDatabaseText.setText(""); //$NON-NLS-1$
+        }
+        if (portText != null && portText.getText() != null) {
+            portText.setText(""); //$NON-NLS-1$
+        }
+        if (fileField != null) {
+            fileField.setText(""); //$NON-NLS-1$
+        }
+        if (datasourceText != null) {
+            datasourceText.setText(""); //$NON-NLS-1$
+        }
+        if (additionParamText != null) {
+            additionParamText.setText(""); //$NON-NLS-1$
+        }
+        if (generalJdbcClassNameText != null) {
+            generalJdbcClassNameText.setText(""); //$NON-NLS-1$
+        }
+        if (generalJdbcDriverjarText != null) {
+            generalJdbcDriverjarText.setText(""); //$NON-NLS-1$
+        }
+        if (additionParamText != null) {
+            additionParamText.setText(""); //$NON-NLS-1$
+        }
+        if (mappingFileText != null) {
+            mappingFileText.setText(""); //$NON-NLS-1$
         }
     }
 

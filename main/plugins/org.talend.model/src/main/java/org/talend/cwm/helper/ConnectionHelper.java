@@ -368,6 +368,17 @@ public class ConnectionHelper {
         connection.getDataPackage().removeAll(schemas);
     }
 
+    public static void removeAllPackages(Connection connection) {
+        Set<Catalog> oldConnectionCatalogs = getAllCatalogs(connection);
+        if (!oldConnectionCatalogs.isEmpty()) {
+            ConnectionHelper.removeCatalogs(oldConnectionCatalogs, connection);
+        }
+        Set<Schema> oldConnectionSchemas = getAllSchemas(connection);
+        if (!oldConnectionSchemas.isEmpty()) {
+            ConnectionHelper.removeSchemas(oldConnectionSchemas, connection);
+        }
+    }
+
     // MOD mzhao feature 10238
     public static boolean addXMLDocuments(Collection<TdXmlSchema> xmlDocuments, Connection dataProvider) {
         return addPackages(xmlDocuments, dataProvider);
