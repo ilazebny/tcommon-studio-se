@@ -76,16 +76,23 @@ public class ContextParameterProposal implements IContentProposal {
         } else {
             desc = Messages.getString("ContextParameterProposal.NoCommentAvaiable"); //$NON-NLS-1$
         }
+        // TDI-30683:fix the NPE pb and another description match pb(need move "\n" from message.propreties to code).
+        MessageFormat format = new MessageFormat(getDescriptionMessagePattern());
+        if (contextParameter.getContext() != null) {
+            Object[] replaceArgs = new Object[] { desc, contextParameter.getContext().getName(), contextParameter.getType(),
+                    contextParameter.getName() };
+            return format.format(replaceArgs);
+        }
+        return desc;
 
-        String message = Messages.getString("ContextParameterProposal.Description"); //$NON-NLS-1$
-        message += Messages.getString("ContextParameterProposal.ContextVariable"); //$NON-NLS-1$
-        message += Messages.getString("ContextParameterProposal.Type"); //$NON-NLS-1$
-        message += Messages.getString("ContextParameterProposal.VariableName"); //$NON-NLS-1$
+    }
 
-        MessageFormat format = new MessageFormat(message);
-//        Object[] args = new Object[] { desc, contextParameter.getType(), getContent() };
-        Object[] args = new Object[] { desc, contextParameter.getContext().getName(), contextParameter.getType(), contextParameter.getName() };
-        return format.format(args);
+    private String getDescriptionMessagePattern() {
+        String message = Messages.getString("ContextParameterProposal.Description") + "\n\n"; //$NON-NLS-1$ //$NON-NLS-2$
+        message += Messages.getString("ContextParameterProposal.ContextVariable") + "\n\n"; //$NON-NLS-1$ //$NON-NLS-2$
+        message += Messages.getString("ContextParameterProposal.Type") + "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+        message += Messages.getString("ContextParameterProposal.VariableName") + "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+        return message;
     }
 
     /*
