@@ -27,6 +27,7 @@ import org.talend.core.CorePlugin;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.ITDQItemService;
 import org.talend.core.PluginChecker;
+import org.talend.core.hadoop.IHadoopClusterService;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.properties.JobletProcessItem;
 import org.talend.core.model.properties.ProcessItem;
@@ -58,6 +59,14 @@ import org.talend.repository.model.IProxyRepositoryFactory;
 public final class ProcessUtils {
 
     private static List<IProcess> fakeProcesses = new ArrayList<IProcess>();
+
+    private static IHadoopClusterService hadoopClusterService = null;
+    static {
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IHadoopClusterService.class)) {
+            hadoopClusterService = (IHadoopClusterService) GlobalServiceRegister.getDefault().getService(
+                    IHadoopClusterService.class);
+        }
+    }
 
     public static void clearFakeProcesses() {
         for (IProcess p : fakeProcesses) {
@@ -189,16 +198,70 @@ public final class ProcessUtils {
                     obj = factory.getLastVersion(relation.getId());
                 }
                 if (obj != null) {
-                    if (!repositoryObjects.contains(obj)) {
-                        repositoryObjects.add(obj);
-                        checkAllVerSionLatest(repositoryObjects, obj);
-                        checkItemDependencies(obj.getProperty().getItem(), repositoryObjects);
+                    updateRepositoryObjects(repositoryObjects, obj);
+                    IRepositoryViewObject clusterObj = getHadoopClusterConnectionIfNeeded(obj, factory);
+                    if (clusterObj != null) {
+                        updateRepositoryObjects(repositoryObjects, clusterObj);
                     }
                 }
             } catch (PersistenceException et) {
                 ExceptionHandler.process(et);
             }
         }
+    }
+
+    /**
+     * DOC cmeng Comment method "updateRepositoryObjects".
+     * 
+     * @param repositoryObjects
+     * @param obj
+     */
+    private static void updateRepositoryObjects(List<IRepositoryViewObject> repositoryObjects, IRepositoryViewObject obj) {
+        if (!repositoryObjects.contains(obj)) {
+            repositoryObjects.add(obj);
+            checkAllVerSionLatest(repositoryObjects, obj);
+            checkItemDependencies(obj.getProperty().getItem(), repositoryObjects);
+        }
+    }
+
+    /**
+     * To check the obj, if the obj is a subItem of a Hadoop Cluster Metadata, then need to get the Cluster connection
+     * item too.
+     * 
+     * @param obj
+     * @param factory
+     * @return
+     */
+    private static IRepositoryViewObject getHadoopClusterConnectionIfNeeded(IRepositoryViewObject obj,
+            IProxyRepositoryFactory factory) {
+        if (hadoopClusterService == null || obj == null) {
+            return null;
+        }
+        Property property = obj.getProperty();
+        if (property == null) {
+            return null;
+        }
+        Item subItem = property.getItem();
+        if (subItem == null) {
+            return null;
+        }
+        if (!hadoopClusterService.isHadoopSubItem(subItem)) {
+            return null;
+        }
+        Item clusterItem = hadoopClusterService.getHadoopClusterBySubitemId(property.getId());
+        if (clusterItem == null) {
+            return null;
+        }
+        Property clusterProperty = clusterItem.getProperty();
+        if (clusterProperty == null) {
+            return null;
+        }
+        try {
+            return factory.getLastVersion(clusterProperty.getId());
+        } catch (PersistenceException et) {
+            ExceptionHandler.process(et);
+        }
+        return null;
     }
 
     private static void checkAllVerSionLatest(List<IRepositoryViewObject> repositoryObjects, IRepositoryViewObject object) {

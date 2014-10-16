@@ -21,6 +21,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.talend.core.GlobalServiceRegister;
+import org.talend.core.hadoop.IHadoopClusterService;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.properties.Project;
 import org.talend.core.model.repository.ERepositoryObjectType;
@@ -37,6 +39,14 @@ public class ImportNodesBuilder {
     private Map<String, ProjectImportNode> projectNodesMap = new HashMap<String, ProjectImportNode>();
 
     private List<ImportItem> allImportItemRecords = new ArrayList<ImportItem>();
+
+    private static IHadoopClusterService hadoopClusterService = null;
+    static {
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IHadoopClusterService.class)) {
+            hadoopClusterService = (IHadoopClusterService) GlobalServiceRegister.getDefault().getService(
+                    IHadoopClusterService.class);
+        }
+    }
 
     public List<ProjectImportNode> getProjectNodes() {
         List<ProjectImportNode> list = new ArrayList(this.projectNodesMap.values());
@@ -78,6 +88,9 @@ public class ImportNodesBuilder {
                 this.projectNodesMap.put(technicalLabel, projectImportNode);
             }
             final Item item = itemRecord.getItem();
+            if (item != null && hadoopClusterService != null && hadoopClusterService.isHadoopSubItem(item)) {
+                return;
+            }
 
             final ERepositoryObjectType itemType = itemRecord.getRepositoryType();
 
