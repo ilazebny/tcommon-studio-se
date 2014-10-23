@@ -2987,6 +2987,8 @@ public class DatabaseForm extends AbstractForm {
                 // be removed.
                 if (isHiveDBConnSelected()) {
                     scrolledComposite.setMinSize(newParent.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+                } else if (isImpalaDBConnSelected()) {
+                    scrolledComposite.setMinSize(newParent.computeSize(SWT.DEFAULT, 550));
                 } else {
                     checkScrolledCompositeSize();
                 }
